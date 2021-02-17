@@ -1,0 +1,7 @@
+<resources>
+
+    <string name="app_name">Gallery</string>
+
+    <string name="storage_permission_denied">Access to the storage was denied by the user</string>
+
+</resources>

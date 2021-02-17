@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:background="#22000000">
+
+    <FrameLayout
+        android:id="@+id/layoutImageContainer"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        app:layout_constraintDimensionRatio="1:1"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent">
+
+        <ImageView
+            android:id="@+id/imagePreview"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:contentDescription="@null"
+            tools:src="@mipmap/ic_launcher" />
+
+        <TextView
+            android:id="@+id/textDuration"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="start|bottom"
+            android:layout_marginStart="4dp"
+            android:layout_marginBottom="4dp"
+            android:background="@drawable/video_duration_bg"
+            android:drawablePadding="1dp"
+            android:gravity="center_vertical"
+            android:includeFontPadding="false"
+            android:paddingStart="0dp"
+            android:paddingEnd="2dp"
+            android:text="00:00"
+            android:textColor="@android:color/white"
+            android:textSize="12sp"
+            app:drawableStartCompat="@drawable/ic_play"
+            tools:ignore="HardcodedText" />
+
+    </FrameLayout>
+
+    <com.google.android.material.textview.MaterialTextView
+        android:id="@+id/textSelectionIndex"
+        android:layout_width="40dp"
+        android:layout_height="40dp"
+        android:background="@drawable/selection_index_bg_selected"
+        android:checked="true"
+        android:gravity="center"
+        android:padding="12dp"
+        android:textColor="@android:color/white"
+        app:autoSizeMaxTextSize="14sp"
+        app:autoSizeMinTextSize="10sp"
+        app:autoSizeTextType="uniform"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        tools:text="99" />
+
+</androidx.constraintlayout.widget.ConstraintLayout>
