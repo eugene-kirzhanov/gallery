@@ -4,13 +4,16 @@ import android.Manifest
 import android.content.pm.PackageManager
 import android.os.Bundle
 import android.view.View
+import android.view.animation.AccelerateDecelerateInterpolator
 import android.widget.ImageView
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.content.ContextCompat
+import androidx.core.view.doOnLayout
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.recyclerview.widget.GridLayoutManager
+import androidx.recyclerview.widget.RecyclerView
 import androidx.recyclerview.widget.SimpleItemAnimator
 import by.anegin.myapp.R
 import by.anegin.myapp.common.ui.viewBinding
@@ -19,6 +22,7 @@ import by.anegin.myapp.feature.gallery.impl.ui.adapter.MediaItemsAdapter
 import by.anegin.myapp.feature.gallery.impl.ui.model.MediaItem
 import by.anegin.myapp.feature.gallery.impl.ui.util.GridItemDecoration
 import com.bumptech.glide.Glide
+import com.google.android.material.floatingactionbutton.ExtendedFloatingActionButton
 import dagger.hilt.android.AndroidEntryPoint
 
 @AndroidEntryPoint
@@ -50,8 +54,32 @@ class GalleryFragment : Fragment(R.layout.fragment_gallery) {
         val spacing = view.context.resources.getDimension(R.dimen.gallery_media_spacing)
         binding.recyclerViewMedia.addItemDecoration(GridItemDecoration(spacing))
 
+        binding.recyclerViewMedia.addOnScrollListener(ExtendedFloatingActionButtonScrollListener(binding.buttonSend))
+
         viewModel.mediaItems.observe(viewLifecycleOwner) {
             (binding.recyclerViewMedia.adapter as? MediaItemsAdapter)?.submitList(it)
+        }
+
+        viewModel.selectedCount.observe(viewLifecycleOwner) { count ->
+            binding.buttonSend.text = getString(R.string.send_with_counter, count)
+            if (count > 0) {
+                animateSendButton(0f)
+            } else {
+                animateSendButton(binding.buttonSend.height * 1.5f)
+            }
+        }
+        binding.buttonSend.doOnLayout {
+            binding.buttonSend.translationY = binding.buttonSend.height * 1.5f
+        }
+    }
+
+    private fun animateSendButton(targetTranslationX: Float) {
+        if (binding.buttonSend.translationY != targetTranslationX) {
+            binding.buttonSend.animate()
+                .translationY(targetTranslationX)
+                .setInterpolator(AccelerateDecelerateInterpolator())
+                .setDuration(200)
+                .start()
         }
     }
 
@@ -75,6 +103,21 @@ class GalleryFragment : Fragment(R.layout.fragment_gallery) {
 
     private fun onMediaItemToggleClick(media: MediaItem) {
         viewModel.toggleMediaItem(media)
+        if (!binding.buttonSend.isExtended) {
+            binding.buttonSend.extend()
+        }
+    }
+
+    class ExtendedFloatingActionButtonScrollListener(
+        private val floatingActionButton: ExtendedFloatingActionButton
+    ) : RecyclerView.OnScrollListener() {
+        override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
+            if (dy > 15 && floatingActionButton.isExtended) {
+                floatingActionButton.shrink()
+            } else if (dy < -5 && !floatingActionButton.isExtended) {
+                floatingActionButton.extend()
+            }
+        }
     }
 
 }

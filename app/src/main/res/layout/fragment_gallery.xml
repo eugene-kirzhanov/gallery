@@ -31,4 +31,16 @@
         tools:orientation="vertical"
         tools:spanCount="3" />
 
+    <com.google.android.material.floatingactionbutton.ExtendedFloatingActionButton
+        android:id="@+id/buttonSend"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="end|bottom"
+        android:layout_marginEnd="16dp"
+        android:layout_marginBottom="16dp"
+        app:icon="@drawable/ic_send"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        tools:text="Send (1)" />
+
 </androidx.coordinatorlayout.widget.CoordinatorLayout>

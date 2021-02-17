@@ -9,10 +9,7 @@ import by.anegin.myapp.feature.gallery.api.model.Media
 import by.anegin.myapp.feature.gallery.impl.ui.model.MediaItem
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.flow.filter
-import kotlinx.coroutines.flow.flowOn
+import kotlinx.coroutines.flow.*
 import java.util.*
 import javax.inject.Inject
 
@@ -33,6 +30,9 @@ class GalleryViewModel @Inject constructor(
         .flowOn(Dispatchers.Default)
         .asLiveData(viewModelScope.coroutineContext)
 
+    val selectedCount = selectedUris.map { it.size }
+        .asLiveData(viewModelScope.coroutineContext)
+
     init {
         mediaSource.init()
     }
@@ -46,13 +46,12 @@ class GalleryViewModel @Inject constructor(
         isStoragePermissionGranted.value = true
     }
 
-    fun toggleMediaItem(mediaItem: MediaItem): Boolean {
+    fun toggleMediaItem(mediaItem: MediaItem) {
         val selectedUris = this.selectedUris.value.toMutableList()
         if (!selectedUris.remove(mediaItem.uri)) {
             selectedUris.add(mediaItem.uri)
         }
         this.selectedUris.value = selectedUris
-        return true
     }
 
     private fun makeMediaItems(isStoragePermissionGranted: Boolean, mediaList: List<Media>, selectedUris: List<Uri>): List<MediaItem> {
