@@ -6,4 +6,6 @@
 
     <string name="send_with_counter">Send (%d)</string>
 
+    <string name="open_in">Open in&#8230;</string>
+
 </resources>

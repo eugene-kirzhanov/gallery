@@ -1,13 +1,18 @@
 package by.anegin.myapp.feature.gallery.impl.ui
 
 import android.Manifest
+import android.annotation.SuppressLint
 import android.content.pm.PackageManager
 import android.os.Bundle
+import android.view.Menu
+import android.view.MenuInflater
 import android.view.View
 import android.view.animation.AccelerateDecelerateInterpolator
 import android.widget.ImageView
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.appcompat.app.AppCompatActivity
+import androidx.appcompat.view.menu.MenuBuilder
 import androidx.core.content.ContextCompat
 import androidx.core.view.doOnLayout
 import androidx.fragment.app.Fragment
@@ -24,6 +29,7 @@ import by.anegin.myapp.feature.gallery.impl.ui.util.GridItemDecoration
 import com.bumptech.glide.Glide
 import com.google.android.material.floatingactionbutton.ExtendedFloatingActionButton
 import dagger.hilt.android.AndroidEntryPoint
+
 
 @AndroidEntryPoint
 class GalleryFragment : Fragment(R.layout.fragment_gallery) {
@@ -46,7 +52,17 @@ class GalleryFragment : Fragment(R.layout.fragment_gallery) {
         }
     }
 
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        setHasOptionsMenu(true)
+    }
+
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+
+        (requireActivity() as? AppCompatActivity)?.apply {
+            setSupportActionBar(binding.toolbar)
+        }
+
         binding.recyclerViewMedia.layoutManager = GridLayoutManager(view.context, 3)
         binding.recyclerViewMedia.adapter = MediaItemsAdapter(Glide.with(this), ::onMediaItemClick, ::onMediaItemToggleClick)
         (binding.recyclerViewMedia.itemAnimator as? SimpleItemAnimator)?.supportsChangeAnimations = false
@@ -54,7 +70,19 @@ class GalleryFragment : Fragment(R.layout.fragment_gallery) {
         val spacing = view.context.resources.getDimension(R.dimen.gallery_media_spacing)
         binding.recyclerViewMedia.addItemDecoration(GridItemDecoration(spacing))
 
-        binding.recyclerViewMedia.addOnScrollListener(ExtendedFloatingActionButtonScrollListener(binding.buttonSend))
+        binding.recyclerViewMedia.addOnScrollListener(object : RecyclerView.OnScrollListener() {
+            override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
+                if (dy > 15 && binding.buttonSend.isExtended) {
+                    binding.buttonSend.shrink()
+                } else if (dy < -5 && !binding.buttonSend.isExtended) {
+                    binding.buttonSend.extend()
+                }
+            }
+        })
+
+        binding.buttonSend.doOnLayout {
+            binding.buttonSend.translationY = binding.buttonSend.height * 1.5f
+        }
 
         viewModel.mediaItems.observe(viewLifecycleOwner) {
             (binding.recyclerViewMedia.adapter as? MediaItemsAdapter)?.submitList(it)
@@ -68,19 +96,15 @@ class GalleryFragment : Fragment(R.layout.fragment_gallery) {
                 animateSendButton(binding.buttonSend.height * 1.5f)
             }
         }
-        binding.buttonSend.doOnLayout {
-            binding.buttonSend.translationY = binding.buttonSend.height * 1.5f
-        }
     }
 
-    private fun animateSendButton(targetTranslationX: Float) {
-        if (binding.buttonSend.translationY != targetTranslationX) {
-            binding.buttonSend.animate()
-                .translationY(targetTranslationX)
-                .setInterpolator(AccelerateDecelerateInterpolator())
-                .setDuration(200)
-                .start()
-        }
+    @SuppressLint("RestrictedApi")
+    override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
+        inflater.inflate(R.menu.gallery, menu)
+
+        (menu as? MenuBuilder)?.setOptionalIconsVisible(true)
+
+        super.onCreateOptionsMenu(menu, inflater)
     }
 
     override fun onResume() {
@@ -94,6 +118,16 @@ class GalleryFragment : Fragment(R.layout.fragment_gallery) {
             }
         } else {
             viewModel.onStoragePermissionGranted()
+        }
+    }
+
+    private fun animateSendButton(targetTranslationX: Float) {
+        if (binding.buttonSend.translationY != targetTranslationX) {
+            binding.buttonSend.animate()
+                .translationY(targetTranslationX)
+                .setInterpolator(AccelerateDecelerateInterpolator())
+                .setDuration(200)
+                .start()
         }
     }
 
