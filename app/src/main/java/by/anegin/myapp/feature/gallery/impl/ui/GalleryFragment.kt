@@ -4,9 +4,7 @@ import android.Manifest
 import android.annotation.SuppressLint
 import android.content.pm.PackageManager
 import android.os.Bundle
-import android.view.Menu
-import android.view.MenuInflater
-import android.view.View
+import android.view.*
 import android.view.animation.AccelerateDecelerateInterpolator
 import android.widget.ImageView
 import android.widget.Toast
@@ -14,8 +12,10 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.view.menu.MenuBuilder
 import androidx.core.content.ContextCompat
+import androidx.core.os.bundleOf
 import androidx.core.view.doOnLayout
-import androidx.fragment.app.Fragment
+import androidx.fragment.app.DialogFragment
+import androidx.fragment.app.setFragmentResult
 import androidx.fragment.app.viewModels
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.RecyclerView
@@ -27,15 +27,24 @@ import by.anegin.myapp.feature.gallery.impl.ui.adapter.MediaItemsAdapter
 import by.anegin.myapp.feature.gallery.impl.ui.model.MediaItem
 import by.anegin.myapp.feature.gallery.impl.ui.util.GridItemDecoration
 import com.bumptech.glide.Glide
-import com.google.android.material.floatingactionbutton.ExtendedFloatingActionButton
 import dagger.hilt.android.AndroidEntryPoint
 
 
 @AndroidEntryPoint
-class GalleryFragment : Fragment(R.layout.fragment_gallery) {
+class GalleryFragment : DialogFragment(R.layout.fragment_gallery) {
 
     companion object {
-        fun newInstance() = GalleryFragment()
+        private const val ARG_REQUEST_KEY = "request_key"
+
+        const val RESULT_TYPE = "result_type"
+        const val RESULT_SELECTED_URIS = "selected_uris"
+
+        const val RESULT_TYPE_URIS = 1
+        const val RESULT_TYPE_USE_EXTERNAL_APP = 2
+
+        fun newInstance(requestKey: String) = GalleryFragment().apply {
+            arguments = bundleOf(ARG_REQUEST_KEY to requestKey)
+        }
     }
 
     private val binding by viewBinding(FragmentGalleryBinding::bind)
@@ -55,12 +64,17 @@ class GalleryFragment : Fragment(R.layout.fragment_gallery) {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setHasOptionsMenu(true)
+        setStyle(STYLE_NORMAL, R.style.Theme_Gallery_FullScreenDialog)
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-
         (requireActivity() as? AppCompatActivity)?.apply {
             setSupportActionBar(binding.toolbar)
+            supportActionBar?.setDisplayHomeAsUpEnabled(true)
+        }
+
+        binding.toolbar.setNavigationOnClickListener {
+            dismiss()
         }
 
         binding.recyclerViewMedia.layoutManager = GridLayoutManager(view.context, 3)
@@ -83,6 +97,9 @@ class GalleryFragment : Fragment(R.layout.fragment_gallery) {
         binding.buttonSend.doOnLayout {
             binding.buttonSend.translationY = binding.buttonSend.height * 1.5f
         }
+        binding.buttonSend.setOnClickListener {
+            returnSelectedUris()
+        }
 
         viewModel.mediaItems.observe(viewLifecycleOwner) {
             (binding.recyclerViewMedia.adapter as? MediaItemsAdapter)?.submitList(it)
@@ -98,13 +115,12 @@ class GalleryFragment : Fragment(R.layout.fragment_gallery) {
         }
     }
 
-    @SuppressLint("RestrictedApi")
-    override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
-        inflater.inflate(R.menu.gallery, menu)
-
-        (menu as? MenuBuilder)?.setOptionalIconsVisible(true)
-
-        super.onCreateOptionsMenu(menu, inflater)
+    override fun onStart() {
+        super.onStart()
+        dialog?.window?.apply {
+            setLayout(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT)
+            setWindowAnimations(R.style.Theme_Gallery_Slide)
+        }
     }
 
     override fun onResume() {
@@ -121,6 +137,22 @@ class GalleryFragment : Fragment(R.layout.fragment_gallery) {
         }
     }
 
+    @SuppressLint("RestrictedApi")
+    override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
+        inflater.inflate(R.menu.gallery, menu)
+        (menu as? MenuBuilder)?.setOptionalIconsVisible(true)
+        super.onCreateOptionsMenu(menu, inflater)
+    }
+
+    override fun onOptionsItemSelected(item: MenuItem): Boolean {
+        return if (item.itemId == R.id.action_open_in) {
+            returnExternanlAppRequested()
+            true
+        } else {
+            super.onOptionsItemSelected(item)
+        }
+    }
+
     private fun animateSendButton(targetTranslationX: Float) {
         if (binding.buttonSend.translationY != targetTranslationX) {
             binding.buttonSend.animate()
@@ -131,26 +163,35 @@ class GalleryFragment : Fragment(R.layout.fragment_gallery) {
         }
     }
 
+    private fun returnSelectedUris() {
+        setFragmentResult(
+            arguments?.getString(ARG_REQUEST_KEY) ?: return,
+            bundleOf(
+                RESULT_TYPE to RESULT_TYPE_URIS,
+                RESULT_SELECTED_URIS to viewModel.getSelectedUris()
+            )
+        )
+        dismiss()
+    }
+
+    private fun returnExternanlAppRequested() {
+        setFragmentResult(
+            arguments?.getString(ARG_REQUEST_KEY) ?: return,
+            bundleOf(
+                RESULT_TYPE to RESULT_TYPE_USE_EXTERNAL_APP
+            )
+        )
+        dismiss()
+    }
+
     private fun onMediaItemClick(view: ImageView, media: MediaItem) {
-        // todo
+        // todo show fullscreen preview
     }
 
     private fun onMediaItemToggleClick(media: MediaItem) {
         viewModel.toggleMediaItem(media)
         if (!binding.buttonSend.isExtended) {
             binding.buttonSend.extend()
-        }
-    }
-
-    class ExtendedFloatingActionButtonScrollListener(
-        private val floatingActionButton: ExtendedFloatingActionButton
-    ) : RecyclerView.OnScrollListener() {
-        override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
-            if (dy > 15 && floatingActionButton.isExtended) {
-                floatingActionButton.shrink()
-            } else if (dy < -5 && !floatingActionButton.isExtended) {
-                floatingActionButton.extend()
-            }
         }
     }
 

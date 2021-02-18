@@ -54,6 +54,10 @@ class GalleryViewModel @Inject constructor(
         this.selectedUris.value = selectedUris
     }
 
+    fun getSelectedUris(): List<Uri> {
+        return selectedUris.value
+    }
+
     private fun makeMediaItems(isStoragePermissionGranted: Boolean, mediaList: List<Media>, selectedUris: List<Uri>): List<MediaItem> {
         return if (!isStoragePermissionGranted) {
             return emptyList()
