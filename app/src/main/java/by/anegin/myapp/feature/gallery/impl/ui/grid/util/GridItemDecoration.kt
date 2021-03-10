@@ -1,4 +1,4 @@
-package by.anegin.myapp.feature.gallery.impl.ui.util
+package by.anegin.myapp.feature.gallery.impl.ui.grid.util
 
 import android.graphics.Rect
 import android.view.View

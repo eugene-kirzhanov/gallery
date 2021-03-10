@@ -1,4 +1,4 @@
-package by.anegin.myapp.feature.gallery.impl.ui.adapter
+package by.anegin.myapp.feature.gallery.impl.ui.grid.adapter
 
 import android.animation.ValueAnimator
 import android.view.View

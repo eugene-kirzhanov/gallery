@@ -1,4 +1,4 @@
-package by.anegin.myapp.feature.gallery.impl.ui
+package by.anegin.myapp.feature.gallery.impl.ui.grid
 
 import android.net.Uri
 import androidx.lifecycle.ViewModel
@@ -6,7 +6,7 @@ import androidx.lifecycle.asLiveData
 import androidx.lifecycle.viewModelScope
 import by.anegin.myapp.feature.gallery.api.data.MediaSource
 import by.anegin.myapp.feature.gallery.api.model.Media
-import by.anegin.myapp.feature.gallery.impl.ui.model.MediaItem
+import by.anegin.myapp.feature.gallery.impl.ui.common.model.MediaItem
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.*

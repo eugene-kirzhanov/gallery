@@ -1,11 +1,11 @@
-package by.anegin.myapp.feature.gallery.impl.ui.adapter
+package by.anegin.myapp.feature.gallery.impl.ui.grid.adapter
 
 import android.view.ViewGroup
 import android.widget.ImageView
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
-import by.anegin.myapp.feature.gallery.impl.ui.model.MediaItem
+import by.anegin.myapp.feature.gallery.impl.ui.common.model.MediaItem
 import com.bumptech.glide.RequestManager
 
 class MediaItemsAdapter(

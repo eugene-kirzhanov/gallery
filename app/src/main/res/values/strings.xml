@@ -8,4 +8,6 @@
 
     <string name="open_in">Open in&#8230;</string>
 
+    <string name="error_loading_image">Error loading image</string>
+
 </resources>

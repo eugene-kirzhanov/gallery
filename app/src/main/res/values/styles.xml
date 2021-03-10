@@ -3,7 +3,10 @@
 
     <style name="Theme.Gallery.FullScreenDialog" parent="Theme.MaterialComponents.DayNight.Dialog">
         <item name="android:windowIsFloating">false</item>
-        <item name="android:windowBackground">@android:color/white</item>
+        <item name="android:windowBackground">@color/bg</item>
+        <item name="android:windowDrawsSystemBarBackgrounds">true</item>
+        <item name="android:statusBarColor">@android:color/transparent</item>
+        <item name="android:navigationBarColor">@android:color/transparent</item>
     </style>
 
     <style name="Theme.Gallery.Slide">

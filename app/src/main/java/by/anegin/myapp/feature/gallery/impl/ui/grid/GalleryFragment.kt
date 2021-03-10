@@ -1,4 +1,4 @@
-package by.anegin.myapp.feature.gallery.impl.ui
+package by.anegin.myapp.feature.gallery.impl.ui.grid
 
 import android.Manifest
 import android.annotation.SuppressLint
@@ -23,18 +23,19 @@ import androidx.recyclerview.widget.SimpleItemAnimator
 import by.anegin.myapp.R
 import by.anegin.myapp.common.ui.viewBinding
 import by.anegin.myapp.databinding.FragmentGalleryBinding
-import by.anegin.myapp.feature.gallery.impl.ui.adapter.MediaItemsAdapter
-import by.anegin.myapp.feature.gallery.impl.ui.model.MediaItem
-import by.anegin.myapp.feature.gallery.impl.ui.util.GridItemDecoration
+import by.anegin.myapp.feature.gallery.impl.ui.common.model.MediaItem
+import by.anegin.myapp.feature.gallery.impl.ui.grid.adapter.MediaItemsAdapter
+import by.anegin.myapp.feature.gallery.impl.ui.grid.util.GridItemDecoration
+import by.anegin.myapp.feature.gallery.impl.ui.viewer.MediaViewerFragment
 import com.bumptech.glide.Glide
 import dagger.hilt.android.AndroidEntryPoint
-
 
 @AndroidEntryPoint
 class GalleryFragment : DialogFragment(R.layout.fragment_gallery) {
 
     companion object {
         private const val ARG_REQUEST_KEY = "request_key"
+        private const val ARG_TITLE = "title"
 
         const val RESULT_TYPE = "result_type"
         const val RESULT_SELECTED_URIS = "selected_uris"
@@ -42,8 +43,11 @@ class GalleryFragment : DialogFragment(R.layout.fragment_gallery) {
         const val RESULT_TYPE_URIS = 1
         const val RESULT_TYPE_USE_EXTERNAL_APP = 2
 
-        fun newInstance(requestKey: String) = GalleryFragment().apply {
-            arguments = bundleOf(ARG_REQUEST_KEY to requestKey)
+        fun newInstance(requestKey: String, title: String) = GalleryFragment().apply {
+            arguments = bundleOf(
+                ARG_REQUEST_KEY to requestKey,
+                ARG_TITLE to title
+            )
         }
     }
 
@@ -185,7 +189,10 @@ class GalleryFragment : DialogFragment(R.layout.fragment_gallery) {
     }
 
     private fun onMediaItemClick(view: ImageView, media: MediaItem) {
-        // todo show fullscreen preview
+        val selectedMediaItems = viewModel.mediaItems.value?.filter { it.selectionNumber != null } ?: emptyList()
+        val title = arguments?.getString(ARG_TITLE) ?: ""
+        MediaViewerFragment.newInstance(selectedMediaItems, media, title)
+            .show(childFragmentManager, null)
     }
 
     private fun onMediaItemToggleClick(media: MediaItem) {

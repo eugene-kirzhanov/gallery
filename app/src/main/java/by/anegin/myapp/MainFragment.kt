@@ -6,7 +6,7 @@ import android.view.View
 import androidx.fragment.app.Fragment
 import by.anegin.myapp.common.ui.viewBinding
 import by.anegin.myapp.databinding.FragmentMainBinding
-import by.anegin.myapp.feature.gallery.impl.ui.GalleryFragment
+import by.anegin.myapp.feature.gallery.impl.ui.grid.GalleryFragment
 
 class MainFragment : Fragment(R.layout.fragment_main) {
 
@@ -39,7 +39,7 @@ class MainFragment : Fragment(R.layout.fragment_main) {
     }
 
     private fun showGallery() {
-        GalleryFragment.newInstance(REQUEST_KEY_PICK_MEDIA)
+        GalleryFragment.newInstance(REQUEST_KEY_PICK_MEDIA, "Username")
             .show(childFragmentManager, null)
     }
 
