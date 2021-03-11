@@ -32,6 +32,7 @@ import by.anegin.myapp.databinding.FragmentGalleryBinding
 import by.anegin.myapp.feature.gallery.impl.ui.gallery.adapter.MediaItemsAdapter
 import by.anegin.myapp.feature.gallery.impl.ui.gallery.model.MediaItem
 import by.anegin.myapp.feature.gallery.impl.ui.gallery.util.GridItemDecoration
+import by.anegin.myapp.feature.gallery.impl.ui.gallery.util.setSingleClickListener
 import by.anegin.myapp.feature.gallery.impl.ui.gallery.viewer.MediaPagerAdapter
 import by.kirich1409.viewbindingdelegate.viewBinding
 import com.bumptech.glide.Glide
@@ -166,7 +167,7 @@ class GalleryFragment : DialogFragment(R.layout.fragment_gallery) {
             val isExtended = viewModel.sendButtonExtended.value ?: false
             setSendButtonExtendState(isExtended)
         }
-        binding.buttonSend.setOnClickListener {
+        binding.buttonSend.setSingleClickListener {
             returnSelectedUris()
         }
 
@@ -190,7 +191,7 @@ class GalleryFragment : DialogFragment(R.layout.fragment_gallery) {
             }
         })
 
-        binding.imageSelectionCheck.setOnClickListener {
+        binding.imageSelectionCheck.setSingleClickListener {
             viewModel.toggleCurrentMediaItem()
         }
 

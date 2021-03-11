@@ -1,4 +1,4 @@
-package by.anegin.myapp.common.ui
+package by.anegin.myapp.feature.gallery.impl.ui.gallery.util
 
 import android.content.Context
 import android.view.LayoutInflater

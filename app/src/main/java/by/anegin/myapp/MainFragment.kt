@@ -6,6 +6,7 @@ import android.view.View
 import androidx.fragment.app.Fragment
 import by.anegin.myapp.databinding.FragmentMainBinding
 import by.anegin.myapp.feature.gallery.impl.ui.gallery.GalleryFragment
+import by.anegin.myapp.feature.gallery.impl.ui.gallery.util.setSingleClickListener
 import by.kirich1409.viewbindingdelegate.viewBinding
 
 class MainFragment : Fragment(R.layout.fragment_main) {
@@ -33,7 +34,7 @@ class MainFragment : Fragment(R.layout.fragment_main) {
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        binding.buttonGallery.setOnClickListener {
+        binding.buttonGallery.setSingleClickListener {
             showGallery()
         }
     }

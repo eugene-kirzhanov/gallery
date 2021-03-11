@@ -14,6 +14,7 @@ import by.anegin.myapp.R
 import by.anegin.myapp.databinding.FragmentImageViewBinding
 import by.anegin.myapp.feature.gallery.impl.data.MediaStoreUtils
 import by.anegin.myapp.feature.gallery.impl.ui.gallery.GalleryViewModel
+import by.anegin.myapp.feature.gallery.impl.ui.gallery.util.setSingleClickListener
 import by.kirich1409.viewbindingdelegate.viewBinding
 import com.davemorrissey.labs.subscaleview.ImageSource
 import com.davemorrissey.labs.subscaleview.SubsamplingScaleImageView
@@ -68,7 +69,7 @@ class ImageViewFragment : Fragment(R.layout.fragment_image_view) {
             binding.image.setImage(ImageSource.uri(imageUri))
         }
 
-        binding.image.setOnClickListener {
+        binding.image.setSingleClickListener {
             galleryViewModel.toggleFullScreen()
         }
 

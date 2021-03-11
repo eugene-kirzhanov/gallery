@@ -3,10 +3,11 @@ package by.anegin.myapp.feature.gallery.impl.ui.gallery.adapter
 import android.view.ViewGroup
 import android.widget.ImageView
 import by.anegin.myapp.R
-import by.anegin.myapp.common.ui.ViewBindingViewHolder
 import by.anegin.myapp.databinding.ItemVideoBinding
 import by.anegin.myapp.feature.gallery.impl.ui.gallery.model.MediaItem
 import by.anegin.myapp.feature.gallery.impl.ui.gallery.util.SimpleGlideRequestListener
+import by.anegin.myapp.feature.gallery.impl.ui.gallery.util.ViewBindingViewHolder
+import by.anegin.myapp.feature.gallery.impl.ui.gallery.util.setSingleClickListener
 import com.bumptech.glide.RequestManager
 import com.bumptech.glide.load.resource.bitmap.CenterCrop
 import com.bumptech.glide.load.resource.drawable.DrawableTransitionOptions.withCrossFade
@@ -32,12 +33,12 @@ class VideoViewHolder(
     private val selectionHelper = MediaSelectionHelper(this, binding.layoutImageContainer)
 
     init {
-        binding.root.setOnClickListener {
+        binding.root.setSingleClickListener {
             video?.let {
                 onClick(binding.imagePreview, it)
             }
         }
-        binding.textSelectionIndex.setOnClickListener {
+        binding.textSelectionIndex.setSingleClickListener {
             video?.let(onToggleClick)
         }
     }
