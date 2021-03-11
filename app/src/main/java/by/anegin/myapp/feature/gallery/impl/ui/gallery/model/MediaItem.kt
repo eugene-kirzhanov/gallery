@@ -1,4 +1,4 @@
-package by.anegin.myapp.feature.gallery.impl.ui.common.model
+package by.anegin.myapp.feature.gallery.impl.ui.gallery.model
 
 import android.net.Uri
 import android.os.Parcelable

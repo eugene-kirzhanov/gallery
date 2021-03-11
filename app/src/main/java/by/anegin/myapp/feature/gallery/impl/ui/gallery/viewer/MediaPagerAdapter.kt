@@ -1,10 +1,10 @@
-package by.anegin.myapp.feature.gallery.impl.ui.viewer
+package by.anegin.myapp.feature.gallery.impl.ui.gallery.viewer
 
 import androidx.fragment.app.Fragment
 import androidx.viewpager2.adapter.FragmentStateAdapter
-import by.anegin.myapp.feature.gallery.impl.ui.common.model.MediaItem
-import by.anegin.myapp.feature.gallery.impl.ui.viewer.image.ImageViewFragment
-import by.anegin.myapp.feature.gallery.impl.ui.viewer.video.VideoViewFragment
+import by.anegin.myapp.feature.gallery.impl.ui.gallery.model.MediaItem
+import by.anegin.myapp.feature.gallery.impl.ui.gallery.viewer.image.ImageViewFragment
+import by.anegin.myapp.feature.gallery.impl.ui.gallery.viewer.video.VideoViewFragment
 
 class MediaPagerAdapter(fragment: Fragment) : FragmentStateAdapter(fragment) {
 
@@ -14,6 +14,14 @@ class MediaPagerAdapter(fragment: Fragment) : FragmentStateAdapter(fragment) {
         this.items.clear()
         this.items.addAll(items)
         notifyDataSetChanged()
+    }
+
+    fun getItem(position: Int): MediaItem {
+        return items[position]
+    }
+
+    fun getItemPosition(item: MediaItem): Int {
+        return items.indexOfFirst { it == item }
     }
 
     override fun getItemCount(): Int = items.size

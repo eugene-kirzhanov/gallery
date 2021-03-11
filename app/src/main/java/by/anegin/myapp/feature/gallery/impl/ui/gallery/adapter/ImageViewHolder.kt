@@ -1,12 +1,12 @@
-package by.anegin.myapp.feature.gallery.impl.ui.grid.adapter
+package by.anegin.myapp.feature.gallery.impl.ui.gallery.adapter
 
 import android.view.ViewGroup
 import android.widget.ImageView
 import by.anegin.myapp.R
 import by.anegin.myapp.common.ui.ViewBindingViewHolder
 import by.anegin.myapp.databinding.ItemImageBinding
-import by.anegin.myapp.feature.gallery.impl.ui.common.model.MediaItem
-import by.anegin.myapp.feature.gallery.impl.ui.grid.util.SimpleGlideRequestListener
+import by.anegin.myapp.feature.gallery.impl.ui.gallery.model.MediaItem
+import by.anegin.myapp.feature.gallery.impl.ui.gallery.util.SimpleGlideRequestListener
 import com.bumptech.glide.RequestManager
 import com.bumptech.glide.load.resource.bitmap.CenterCrop
 import com.bumptech.glide.load.resource.drawable.DrawableTransitionOptions.withCrossFade

@@ -1,4 +1,4 @@
-package by.anegin.myapp.feature.gallery.impl.ui.viewer.image
+package by.anegin.myapp.feature.gallery.impl.ui.gallery.viewer.image
 
 import android.net.Uri
 import android.os.Bundle
@@ -13,7 +13,7 @@ import androidx.lifecycle.lifecycleScope
 import by.anegin.myapp.R
 import by.anegin.myapp.databinding.FragmentImageViewBinding
 import by.anegin.myapp.feature.gallery.impl.data.MediaStoreUtils
-import by.anegin.myapp.feature.gallery.impl.ui.viewer.MediaViewerViewModel
+import by.anegin.myapp.feature.gallery.impl.ui.gallery.GalleryViewModel
 import by.kirich1409.viewbindingdelegate.viewBinding
 import com.davemorrissey.labs.subscaleview.ImageSource
 import com.davemorrissey.labs.subscaleview.SubsamplingScaleImageView
@@ -32,7 +32,7 @@ class ImageViewFragment : Fragment(R.layout.fragment_image_view) {
 
     private val binding by viewBinding(FragmentImageViewBinding::bind)
 
-    private val parentViewModel: MediaViewerViewModel by viewModels({ requireParentFragment() })
+    private val galleryViewModel: GalleryViewModel by viewModels({ requireParentFragment() })
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         view.setOnApplyWindowInsetsListener { _, insets -> insets }
@@ -69,7 +69,13 @@ class ImageViewFragment : Fragment(R.layout.fragment_image_view) {
         }
 
         binding.image.setOnClickListener {
-            parentViewModel.toggleFullScreen()
+            galleryViewModel.toggleFullScreen()
+        }
+
+        galleryViewModel.currentMediaItem.observe(viewLifecycleOwner) { mediaItem ->
+            if (mediaItem?.uri != imageUri) {
+                binding.image.resetScaleAndCenter()
+            }
         }
     }
 

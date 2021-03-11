@@ -1,4 +1,4 @@
-package by.anegin.myapp.feature.gallery.impl.ui.grid
+package by.anegin.myapp.feature.gallery.impl.ui.gallery
 
 import android.net.Uri
 import androidx.lifecycle.ViewModel
@@ -6,7 +6,7 @@ import androidx.lifecycle.asLiveData
 import androidx.lifecycle.viewModelScope
 import by.anegin.myapp.feature.gallery.api.data.MediaSource
 import by.anegin.myapp.feature.gallery.api.model.Media
-import by.anegin.myapp.feature.gallery.impl.ui.common.model.MediaItem
+import by.anegin.myapp.feature.gallery.impl.ui.gallery.model.MediaItem
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.*
@@ -21,17 +21,37 @@ class GalleryViewModel @Inject constructor(
     private val isStoragePermissionGranted = MutableStateFlow(false)
     private val selectedUris = MutableStateFlow<List<Uri>>(emptyList())
 
-    val mediaItems = combine(
+    private val _mediaItems = combine(
         isStoragePermissionGranted.filter { it },
         mediaSource.media,
         selectedUris,
         ::makeMediaItems
-    )
-        .flowOn(Dispatchers.Default)
-        .asLiveData(viewModelScope.coroutineContext)
+    ).flowOn(Dispatchers.Default)
+    val mediaItems = _mediaItems.asLiveData(viewModelScope.coroutineContext)
 
     val selectedCount = selectedUris.map { it.size }
         .asLiveData(viewModelScope.coroutineContext)
+
+    private val _isInFullScreenMode = MutableStateFlow(false)
+    val isInFullScreenMode = _isInFullScreenMode.asLiveData(viewModelScope.coroutineContext)
+
+    private val _currentMediaItemUri = MutableStateFlow<Uri?>(null)
+    private val _currentMediaItem = combine(_mediaItems, _currentMediaItemUri) { mediaItems, currentMediaItemUri ->
+        currentMediaItemUri?.let { uri ->
+            mediaItems.find { it.uri == uri }
+        }
+    }
+    val currentMediaItem = _currentMediaItem.asLiveData(viewModelScope.coroutineContext)
+
+    private val _toolbarCounter = combine(selectedUris, _currentMediaItemUri) { selectedUris, currentMediaItemUri ->
+        if (currentMediaItemUri != null) selectedUris.size else 0
+    }
+    val toolbarCounter = _toolbarCounter.asLiveData(viewModelScope.coroutineContext)
+
+    private val _toolbarCheck = _currentMediaItem.map { currentMediaItem ->
+        currentMediaItem?.let { it.selectionNumber != null }
+    }
+    val toolbarCheck = _toolbarCheck.asLiveData(viewModelScope.coroutineContext)
 
     init {
         mediaSource.init()
@@ -41,6 +61,12 @@ class GalleryViewModel @Inject constructor(
         mediaSource.destroy()
         super.onCleared()
     }
+
+    fun toggleFullScreen() {
+        _isInFullScreenMode.value = _isInFullScreenMode.value != true
+    }
+
+    fun isInFullScreenMode() = _isInFullScreenMode.value
 
     fun onStoragePermissionGranted() {
         isStoragePermissionGranted.value = true
@@ -56,6 +82,18 @@ class GalleryViewModel @Inject constructor(
 
     fun getSelectedUris(): List<Uri> {
         return selectedUris.value
+    }
+
+    fun onCurrentMediaItemChanged(mediaItemUri: Uri?) {
+        _currentMediaItemUri.value = mediaItemUri
+    }
+
+    fun getCurrentMediaItemUri() = _currentMediaItemUri.value
+
+    fun toggleCurrentMediaItem() {
+        currentMediaItem.value?.let {
+            toggleMediaItem(it)
+        }
     }
 
     private fun makeMediaItems(isStoragePermissionGranted: Boolean, mediaList: List<Media>, selectedUris: List<Uri>): List<MediaItem> {

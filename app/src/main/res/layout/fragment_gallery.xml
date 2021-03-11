@@ -5,7 +5,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:fitsSystemWindows="true"
-    tools:context=".feature.gallery.impl.ui.grid.GalleryFragment">
+    tools:context=".feature.gallery.impl.ui.gallery.GalleryFragment">
 
     <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
@@ -32,7 +32,40 @@
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent"
             app:title="@string/app_name"
-            app:titleTextColor="@android:color/white" />
+            app:titleTextColor="@android:color/white">
+
+            <ImageView
+                android:id="@+id/imageSelectionCheck"
+                android:layout_width="48dp"
+                android:layout_height="48dp"
+                android:layout_gravity="center_vertical|end"
+                android:background="@drawable/selection_check_bg"
+                android:contentDescription="@null"
+                android:scaleType="centerInside"
+                android:src="@drawable/selection_check_mark"
+                android:visibility="gone"
+                tools:visibility="visible" />
+
+            <com.google.android.material.textview.MaterialTextView
+                android:id="@+id/textSelectedCount"
+                android:layout_width="48dp"
+                android:layout_height="48dp"
+                android:layout_gravity="center_vertical|end"
+                android:background="@drawable/selection_index_bg_normal"
+                android:checked="true"
+                android:gravity="center"
+                android:padding="12dp"
+                android:textColor="@android:color/white"
+                android:visibility="gone"
+                app:autoSizeMaxTextSize="14sp"
+                app:autoSizeMinTextSize="10sp"
+                app:autoSizeTextType="uniform"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintTop_toTopOf="parent"
+                tools:text="99"
+                tools:visibility="visible" />
+
+        </androidx.appcompat.widget.Toolbar>
 
         <View
             android:id="@+id/bottomBar"

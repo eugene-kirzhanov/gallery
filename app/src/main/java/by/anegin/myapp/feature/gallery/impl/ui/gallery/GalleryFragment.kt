@@ -1,16 +1,20 @@
-package by.anegin.myapp.feature.gallery.impl.ui.grid
+package by.anegin.myapp.feature.gallery.impl.ui.gallery
 
 import android.Manifest
+import android.annotation.SuppressLint
 import android.app.Dialog
 import android.content.pm.PackageManager
 import android.os.Bundle
+import android.view.MenuItem
 import android.view.View
+import android.view.View.*
 import android.view.ViewGroup
 import android.view.WindowManager
 import android.view.animation.AccelerateDecelerateInterpolator
 import android.widget.ImageView
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.appcompat.view.menu.MenuBuilder
 import androidx.core.content.ContextCompat
 import androidx.core.os.bundleOf
 import androidx.core.view.WindowInsetsCompat
@@ -22,12 +26,13 @@ import androidx.fragment.app.viewModels
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import androidx.recyclerview.widget.SimpleItemAnimator
+import androidx.viewpager2.widget.ViewPager2
 import by.anegin.myapp.R
 import by.anegin.myapp.databinding.FragmentGalleryBinding
-import by.anegin.myapp.feature.gallery.impl.ui.common.model.MediaItem
-import by.anegin.myapp.feature.gallery.impl.ui.grid.adapter.MediaItemsAdapter
-import by.anegin.myapp.feature.gallery.impl.ui.grid.util.GridItemDecoration
-import by.anegin.myapp.feature.gallery.impl.ui.viewer.MediaViewerFragment
+import by.anegin.myapp.feature.gallery.impl.ui.gallery.adapter.MediaItemsAdapter
+import by.anegin.myapp.feature.gallery.impl.ui.gallery.model.MediaItem
+import by.anegin.myapp.feature.gallery.impl.ui.gallery.util.GridItemDecoration
+import by.anegin.myapp.feature.gallery.impl.ui.gallery.viewer.MediaPagerAdapter
 import by.kirich1409.viewbindingdelegate.viewBinding
 import com.bumptech.glide.Glide
 import dagger.hilt.android.AndroidEntryPoint
@@ -67,17 +72,30 @@ class GalleryFragment : DialogFragment(R.layout.fragment_gallery) {
         }
     }
 
+    private var menuItemOpenIn: MenuItem? = null
+
+    private lateinit var pagerAdapter: MediaPagerAdapter
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setStyle(STYLE_NORMAL, R.style.Theme_Gallery_FullScreenDialog)
     }
 
     override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
-        return super.onCreateDialog(savedInstanceState).apply {
+        return object : Dialog(requireContext(), theme) {
+            override fun onBackPressed() {
+                if (viewModel.getCurrentMediaItemUri() != null) {
+                    viewModel.onCurrentMediaItemChanged(null)
+                } else {
+                    dismiss()
+                }
+            }
+        }.apply {
             window?.addFlags(WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS)
         }
     }
 
+    @SuppressLint("RestrictedApi")
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         view.setOnApplyWindowInsetsListener { _, insets ->
             val systemBarInsets = WindowInsetsCompat.toWindowInsetsCompat(insets)
@@ -88,14 +106,36 @@ class GalleryFragment : DialogFragment(R.layout.fragment_gallery) {
         }
 
         binding.toolbar.apply {
+            requireActivity().menuInflater.inflate(R.menu.gallery, menu)
+            (menu as? MenuBuilder)?.setOptionalIconsVisible(true)
+            menuItemOpenIn = menu.findItem(R.id.action_open_in)
+            setOnMenuItemClickListener { item ->
+                if (item.itemId == R.id.action_open_in) {
+                    returnExternanlAppRequested()
+                    true
+                } else {
+                    false
+                }
+            }
+
             setNavigationIcon(R.drawable.abc_ic_ab_back_material)
             setNavigationOnClickListener {
-                dismiss()
+                dialog?.onBackPressed()
             }
         }
 
+        val gridAdapter = MediaItemsAdapter(Glide.with(this), ::onMediaItemClick, ::onMediaItemToggleClick)
+        pagerAdapter = MediaPagerAdapter(this)
+
+        viewModel.mediaItems.observe(viewLifecycleOwner) {
+            gridAdapter.submitList(it)
+            pagerAdapter.setItems(it)
+        }
+
+        // === Grid ===
+
         binding.recyclerViewMedia.layoutManager = GridLayoutManager(view.context, 3)
-        binding.recyclerViewMedia.adapter = MediaItemsAdapter(Glide.with(this), ::onMediaItemClick, ::onMediaItemToggleClick)
+        binding.recyclerViewMedia.adapter = gridAdapter
         (binding.recyclerViewMedia.itemAnimator as? SimpleItemAnimator)?.supportsChangeAnimations = false
 
         val spacing = view.context.resources.getDimension(R.dimen.gallery_media_spacing)
@@ -118,17 +158,59 @@ class GalleryFragment : DialogFragment(R.layout.fragment_gallery) {
             returnSelectedUris()
         }
 
-        viewModel.mediaItems.observe(viewLifecycleOwner) {
-            (binding.recyclerViewMedia.adapter as? MediaItemsAdapter)?.submitList(it)
-        }
-
         viewModel.selectedCount.observe(viewLifecycleOwner) { count ->
             binding.buttonSend.text = getString(R.string.send_with_counter, count)
-            if (count > 0) {
-                animateSendButton(0f)
-            } else {
-                animateSendButton(binding.buttonSend.height * 1.5f + binding.bottomBar.height)
+            setSendButtonVisibility(visible = count > 0)
+        }
+
+        // === Viewer ===
+
+        binding.viewPagerMedia.adapter = pagerAdapter
+        binding.viewPagerMedia.offscreenPageLimit = 1
+        binding.viewPagerMedia.registerOnPageChangeCallback(object : ViewPager2.OnPageChangeCallback() {
+            override fun onPageScrollStateChanged(state: Int) {
+                if (state == ViewPager2.SCROLL_STATE_IDLE) {
+                    val currentPosition = binding.viewPagerMedia.currentItem
+                    if (currentPosition in 0 until pagerAdapter.itemCount) {
+                        val currentMedia = pagerAdapter.getItem(currentPosition)
+                        viewModel.onCurrentMediaItemChanged(currentMedia.uri)
+                    }
+                }
             }
+        })
+
+        viewModel.currentMediaItem.observe(viewLifecycleOwner) { mediaItem ->
+            val isInViewerMode = mediaItem != null
+            menuItemOpenIn?.isVisible = !isInViewerMode
+
+            val toolbarBgColor = ContextCompat.getColor(requireContext(), if (isInViewerMode) R.color.media_view_toolbar_bg else R.color.bg)
+            binding.toolbar.setBackgroundColor(toolbarBgColor)
+            binding.bottomBar.setBackgroundColor(toolbarBgColor)
+
+            binding.recyclerViewMedia.visibility = if (isInViewerMode) INVISIBLE else VISIBLE
+            binding.viewPagerMedia.visibility = if (isInViewerMode) VISIBLE else INVISIBLE
+
+            if (!isInViewerMode && viewModel.isInFullScreenMode()) {
+                viewModel.toggleFullScreen()
+            }
+        }
+        viewModel.isInFullScreenMode.observe(viewLifecycleOwner) { isInFullscreen ->
+            setToolbarsVisibility(visible = !isInFullscreen)
+        }
+
+        // =============
+
+        binding.imageSelectionCheck.setOnClickListener {
+            viewModel.toggleCurrentMediaItem()
+        }
+
+        viewModel.toolbarCounter.observe(viewLifecycleOwner) { count ->
+            binding.textSelectedCount.text = count.toString()
+            binding.textSelectedCount.visibility = if (count > 0) VISIBLE else INVISIBLE
+        }
+        viewModel.toolbarCheck.observe(viewLifecycleOwner) { check ->
+            binding.imageSelectionCheck.isSelected = check == true
+            binding.imageSelectionCheck.visibility = if (check != null) VISIBLE else GONE
         }
     }
 
@@ -154,32 +236,6 @@ class GalleryFragment : DialogFragment(R.layout.fragment_gallery) {
         }
     }
 
-//    @SuppressLint("RestrictedApi")
-//    override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
-//        inflater.inflate(R.menu.gallery, menu)
-//        (menu as? MenuBuilder)?.setOptionalIconsVisible(true)
-//        super.onCreateOptionsMenu(menu, inflater)
-//    }
-//
-//    override fun onOptionsItemSelected(item: MenuItem): Boolean {
-//        return if (item.itemId == R.id.action_open_in) {
-//            returnExternanlAppRequested()
-//            true
-//        } else {
-//            super.onOptionsItemSelected(item)
-//        }
-//    }
-
-    private fun animateSendButton(targetTranslationX: Float) {
-        if (binding.buttonSend.translationY != targetTranslationX) {
-            binding.buttonSend.animate()
-                .translationY(targetTranslationX)
-                .setInterpolator(AccelerateDecelerateInterpolator())
-                .setDuration(200)
-                .start()
-        }
-    }
-
     private fun returnSelectedUris() {
         setFragmentResult(
             arguments?.getString(ARG_REQUEST_KEY) ?: return,
@@ -201,17 +257,62 @@ class GalleryFragment : DialogFragment(R.layout.fragment_gallery) {
         dismiss()
     }
 
-    private fun onMediaItemClick(view: ImageView, media: MediaItem) {
-        val selectedMediaItems = viewModel.mediaItems.value?.filter { it.selectionNumber != null } ?: emptyList()
-        val title = arguments?.getString(ARG_TITLE) ?: ""
-        MediaViewerFragment.newInstance(selectedMediaItems, media, title)
-            .show(childFragmentManager, null)
+    private fun onMediaItemClick(view: ImageView, mediaItem: MediaItem) {
+        val itemPosition = pagerAdapter.getItemPosition(mediaItem)
+        if (itemPosition == -1) return
+        binding.viewPagerMedia.setCurrentItem(itemPosition, false)
+        viewModel.onCurrentMediaItemChanged(mediaItem.uri)
     }
 
     private fun onMediaItemToggleClick(media: MediaItem) {
         viewModel.toggleMediaItem(media)
         if (!binding.buttonSend.isExtended) {
             binding.buttonSend.extend()
+        }
+    }
+
+    // === Send button ===
+
+    private fun setSendButtonVisibility(visible: Boolean) {
+        if (visible) {
+            animateSendButton(0f)
+        } else {
+            animateSendButton(binding.buttonSend.height * 1.5f + binding.bottomBar.height)
+        }
+    }
+
+    private fun animateSendButton(targetTranslationX: Float) {
+        if (binding.buttonSend.translationY != targetTranslationX) {
+            binding.buttonSend.animate()
+                .translationY(targetTranslationX)
+                .setInterpolator(AccelerateDecelerateInterpolator())
+                .setDuration(200)
+                .start()
+        }
+    }
+
+    // === Toolbars ===
+
+    private fun setToolbarsVisibility(visible: Boolean) {
+        if (visible) {
+            animateToolbars(0f, 0f)
+        } else {
+            animateToolbars(-binding.toolbar.height.toFloat(), binding.bottomBar.height.toFloat())
+        }
+    }
+
+    private fun animateToolbars(toolbarTranslationY: Float, bottomViewTranslationY: Float) {
+        if (binding.toolbar.translationY != toolbarTranslationY) {
+            binding.toolbar.animate()
+                .translationY(toolbarTranslationY)
+                .setDuration(250)
+                .start()
+        }
+        if (binding.bottomBar.translationY != bottomViewTranslationY) {
+            binding.bottomBar.animate()
+                .translationY(bottomViewTranslationY)
+                .setDuration(250)
+                .start()
         }
     }
 
