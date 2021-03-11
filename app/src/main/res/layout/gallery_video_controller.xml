@@ -7,6 +7,9 @@
     <ImageButton
         android:id="@id/exo_play"
         style="@style/ExoMediaButton.Play"
+        android:layout_width="56dp"
+        android:layout_height="56dp"
+        android:background="@drawable/video_control_bg"
         android:contentDescription="@null"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
@@ -16,6 +19,9 @@
     <ImageButton
         android:id="@id/exo_pause"
         style="@style/ExoMediaButton.Pause"
+        android:layout_width="56dp"
+        android:layout_height="56dp"
+        android:background="@drawable/video_control_bg"
         android:contentDescription="@null"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
