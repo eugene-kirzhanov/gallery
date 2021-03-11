@@ -76,9 +76,12 @@ class GalleryFragment : DialogFragment(R.layout.fragment_gallery) {
 
     private lateinit var pagerAdapter: MediaPagerAdapter
 
+    private var wasRestored = false
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setStyle(STYLE_NORMAL, R.style.Theme_Gallery_FullScreenDialog)
+        wasRestored = savedInstanceState != null
     }
 
     override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
@@ -102,6 +105,10 @@ class GalleryFragment : DialogFragment(R.layout.fragment_gallery) {
                 .getInsets(WindowInsetsCompat.Type.systemBars())
             binding.toolbar.setPadding(0, systemBarInsets.top, 0, 0)
             binding.bottomBar.updateLayoutParams { height = systemBarInsets.bottom }
+
+            val isInFullScreenMode = viewModel.isInFullScreenMode.value ?: false
+            setToolbarsVisibility(visible = !isInFullScreenMode, animate = false)
+
             insets
         }
 
@@ -134,7 +141,8 @@ class GalleryFragment : DialogFragment(R.layout.fragment_gallery) {
 
         // === Grid ===
 
-        binding.recyclerViewMedia.layoutManager = GridLayoutManager(view.context, 3)
+        val columnsCount = resources.getInteger(R.integer.gallery_columns_count)
+        binding.recyclerViewMedia.layoutManager = GridLayoutManager(view.context, columnsCount)
         binding.recyclerViewMedia.adapter = gridAdapter
         (binding.recyclerViewMedia.itemAnimator as? SimpleItemAnimator)?.supportsChangeAnimations = false
 
@@ -152,8 +160,11 @@ class GalleryFragment : DialogFragment(R.layout.fragment_gallery) {
         })
 
         binding.buttonSend.doOnLayout {
-            binding.buttonSend.translationY = binding.buttonSend.height * 1.5f + binding.bottomBar.height
-            binding.buttonSend.shrink()
+            val isSendButtonVisibile = viewModel.sendButtonVisiblity.value ?: false
+            setSendButtonVisibility(isSendButtonVisibile, animate = false)
+
+            val isExtended = viewModel.sendButtonExtended.value ?: false
+            setSendButtonExtendState(isExtended)
         }
         binding.buttonSend.setOnClickListener {
             returnSelectedUris()
@@ -184,6 +195,13 @@ class GalleryFragment : DialogFragment(R.layout.fragment_gallery) {
         }
 
         viewModel.currentMediaItem.observe(viewLifecycleOwner) { mediaItem ->
+            if (mediaItem != null) {
+                val itemPosition = pagerAdapter.getItemPosition(mediaItem)
+                if (itemPosition != -1 && itemPosition != binding.viewPagerMedia.currentItem) {
+                    binding.viewPagerMedia.setCurrentItem(itemPosition, false)
+                }
+            }
+
             val isInViewerMode = mediaItem != null
             menuItemOpenIn?.isVisible = !isInViewerMode
 
@@ -200,7 +218,7 @@ class GalleryFragment : DialogFragment(R.layout.fragment_gallery) {
         }
         viewModel.toolbarCounter.observe(viewLifecycleOwner) { count ->
             binding.textSelectedCount.text = count.toString()
-            binding.textSelectedCount.visibility = if (count > 0) VISIBLE else INVISIBLE
+            binding.textSelectedCount.visibility = if (count > 0) VISIBLE else GONE
         }
         viewModel.toolbarCheck.observe(viewLifecycleOwner) { check ->
             binding.imageSelectionCheck.isSelected = check == true
@@ -213,14 +231,10 @@ class GalleryFragment : DialogFragment(R.layout.fragment_gallery) {
         // =============
 
         viewModel.sendButtonVisiblity.observe(viewLifecycleOwner) { visible ->
-            setSendButtonVisibility(visible)
+            setSendButtonVisibility(visible, animate = true)
         }
         viewModel.sendButtonExtended.observe(viewLifecycleOwner) { extended ->
-            if (extended && !binding.buttonSend.isExtended) {
-                binding.buttonSend.extend()
-            } else if (!extended && binding.buttonSend.isExtended) {
-                binding.buttonSend.shrink()
-            }
+            setSendButtonExtendState(extended)
         }
     }
 
@@ -228,7 +242,9 @@ class GalleryFragment : DialogFragment(R.layout.fragment_gallery) {
         super.onStart()
         dialog?.window?.apply {
             setLayout(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT)
-            setWindowAnimations(R.style.Theme_Gallery_Slide)
+            if (!wasRestored) {
+                setWindowAnimations(R.style.Theme_Gallery_Slide)
+            }
         }
     }
 
@@ -247,11 +263,18 @@ class GalleryFragment : DialogFragment(R.layout.fragment_gallery) {
     }
 
     private fun returnSelectedUris() {
+        var selectedUris = viewModel.getSelectedUris()
+        if (selectedUris.isEmpty()) {
+            val currentMediaItemUri = viewModel.getCurrentMediaItemUri()
+            if (currentMediaItemUri != null) {
+                selectedUris = arrayListOf(currentMediaItemUri)
+            }
+        }
         setFragmentResult(
             arguments?.getString(ARG_REQUEST_KEY) ?: return,
             bundleOf(
                 RESULT_TYPE to RESULT_TYPE_URIS,
-                RESULT_SELECTED_URIS to viewModel.getSelectedUris()
+                RESULT_SELECTED_URIS to selectedUris
             )
         )
         dismiss()
@@ -268,9 +291,9 @@ class GalleryFragment : DialogFragment(R.layout.fragment_gallery) {
     }
 
     private fun onMediaItemClick(view: ImageView, mediaItem: MediaItem) {
-        val itemPosition = pagerAdapter.getItemPosition(mediaItem)
-        if (itemPosition == -1) return
-        binding.viewPagerMedia.setCurrentItem(itemPosition, false)
+//        val itemPosition = pagerAdapter.getItemPosition(mediaItem)
+//        if (itemPosition == -1) return
+//        binding.viewPagerMedia.setCurrentItem(itemPosition, false)
         viewModel.onCurrentMediaItemChanged(mediaItem.uri)
     }
 
@@ -278,48 +301,55 @@ class GalleryFragment : DialogFragment(R.layout.fragment_gallery) {
         viewModel.toggleMediaItem(media)
     }
 
-    // === Send button ===
+    private fun setSendButtonExtendState(extended: Boolean) {
+        if (extended && !binding.buttonSend.isExtended) {
+            binding.buttonSend.extend()
+        } else if (!extended && binding.buttonSend.isExtended) {
+            binding.buttonSend.shrink()
+        }
+    }
 
-    private fun setSendButtonVisibility(visible: Boolean) {
-        if (visible) {
-            animateSendButton(0f)
+    private fun setSendButtonVisibility(visible: Boolean, animate: Boolean = true) {
+        val targetTranslationY = if (visible) {
+            0f
         } else {
-            animateSendButton(binding.buttonSend.height * 1.5f + binding.bottomBar.height)
+            binding.buttonSend.height * 1.5f + binding.bottomBar.height
         }
-    }
-
-    private fun animateSendButton(targetTranslationX: Float) {
-        if (binding.buttonSend.translationY != targetTranslationX) {
-            binding.buttonSend.animate()
-                .translationY(targetTranslationX)
-                .setInterpolator(AccelerateDecelerateInterpolator())
-                .setDuration(200)
-                .start()
-        }
-    }
-
-    // === Toolbars ===
-
-    private fun setToolbarsVisibility(visible: Boolean) {
-        if (visible) {
-            animateToolbars(0f, 0f)
+        if (animate) {
+            if (binding.buttonSend.translationY != targetTranslationY) {
+                binding.buttonSend.animate()
+                    .translationY(targetTranslationY)
+                    .setInterpolator(AccelerateDecelerateInterpolator())
+                    .setDuration(200)
+                    .start()
+            }
         } else {
-            animateToolbars(-binding.toolbar.height.toFloat(), binding.bottomBar.height.toFloat())
+            binding.buttonSend.translationY = targetTranslationY
         }
     }
 
-    private fun animateToolbars(toolbarTranslationY: Float, bottomViewTranslationY: Float) {
-        if (binding.toolbar.translationY != toolbarTranslationY) {
-            binding.toolbar.animate()
-                .translationY(toolbarTranslationY)
-                .setDuration(250)
-                .start()
+    private fun setToolbarsVisibility(visible: Boolean, animate: Boolean = true) {
+        val (toolbarTranslationY, bottomViewTranslationY) = if (visible) {
+            0f to 0f
+        } else {
+            -binding.toolbar.height.toFloat() to binding.bottomBar.height.toFloat()
         }
-        if (binding.bottomBar.translationY != bottomViewTranslationY) {
-            binding.bottomBar.animate()
-                .translationY(bottomViewTranslationY)
-                .setDuration(250)
-                .start()
+        if (animate) {
+            if (binding.toolbar.translationY != toolbarTranslationY) {
+                binding.toolbar.animate()
+                    .translationY(toolbarTranslationY)
+                    .setDuration(250)
+                    .start()
+            }
+            if (binding.bottomBar.translationY != bottomViewTranslationY) {
+                binding.bottomBar.animate()
+                    .translationY(bottomViewTranslationY)
+                    .setDuration(250)
+                    .start()
+            }
+        } else {
+            binding.toolbar.translationY = toolbarTranslationY
+            binding.bottomBar.translationY = bottomViewTranslationY
         }
     }
 

@@ -102,12 +102,6 @@
             app:layout_constraintEnd_toEndOf="parent"
             tools:text="Send (1)" />
 
-        <androidx.constraintlayout.widget.Group
-            android:id="@+id/groupGrid"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            app:constraint_referenced_ids="recyclerViewMedia,buttonSend" />
-
     </androidx.constraintlayout.widget.ConstraintLayout>
 
 </androidx.coordinatorlayout.widget.CoordinatorLayout>
