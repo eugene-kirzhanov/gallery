@@ -153,6 +153,7 @@ class GalleryFragment : DialogFragment(R.layout.fragment_gallery) {
 
         binding.buttonSend.doOnLayout {
             binding.buttonSend.translationY = binding.buttonSend.height * 1.5f + binding.bottomBar.height
+            binding.buttonSend.shrink()
         }
         binding.buttonSend.setOnClickListener {
             returnSelectedUris()
@@ -160,7 +161,6 @@ class GalleryFragment : DialogFragment(R.layout.fragment_gallery) {
 
         viewModel.selectedCount.observe(viewLifecycleOwner) { count ->
             binding.buttonSend.text = getString(R.string.send_with_counter, count)
-            setSendButtonVisibility(visible = count > 0)
         }
 
         // === Viewer ===
@@ -179,6 +179,10 @@ class GalleryFragment : DialogFragment(R.layout.fragment_gallery) {
             }
         })
 
+        binding.imageSelectionCheck.setOnClickListener {
+            viewModel.toggleCurrentMediaItem()
+        }
+
         viewModel.currentMediaItem.observe(viewLifecycleOwner) { mediaItem ->
             val isInViewerMode = mediaItem != null
             menuItemOpenIn?.isVisible = !isInViewerMode
@@ -194,16 +198,6 @@ class GalleryFragment : DialogFragment(R.layout.fragment_gallery) {
                 viewModel.toggleFullScreen()
             }
         }
-        viewModel.isInFullScreenMode.observe(viewLifecycleOwner) { isInFullscreen ->
-            setToolbarsVisibility(visible = !isInFullscreen)
-        }
-
-        // =============
-
-        binding.imageSelectionCheck.setOnClickListener {
-            viewModel.toggleCurrentMediaItem()
-        }
-
         viewModel.toolbarCounter.observe(viewLifecycleOwner) { count ->
             binding.textSelectedCount.text = count.toString()
             binding.textSelectedCount.visibility = if (count > 0) VISIBLE else INVISIBLE
@@ -211,6 +205,22 @@ class GalleryFragment : DialogFragment(R.layout.fragment_gallery) {
         viewModel.toolbarCheck.observe(viewLifecycleOwner) { check ->
             binding.imageSelectionCheck.isSelected = check == true
             binding.imageSelectionCheck.visibility = if (check != null) VISIBLE else GONE
+        }
+        viewModel.isInFullScreenMode.observe(viewLifecycleOwner) { isInFullscreen ->
+            setToolbarsVisibility(visible = !isInFullscreen)
+        }
+
+        // =============
+
+        viewModel.sendButtonVisiblity.observe(viewLifecycleOwner) { visible ->
+            setSendButtonVisibility(visible)
+        }
+        viewModel.sendButtonExtended.observe(viewLifecycleOwner) { extended ->
+            if (extended && !binding.buttonSend.isExtended) {
+                binding.buttonSend.extend()
+            } else if (!extended && binding.buttonSend.isExtended) {
+                binding.buttonSend.shrink()
+            }
         }
     }
 
@@ -266,9 +276,6 @@ class GalleryFragment : DialogFragment(R.layout.fragment_gallery) {
 
     private fun onMediaItemToggleClick(media: MediaItem) {
         viewModel.toggleMediaItem(media)
-        if (!binding.buttonSend.isExtended) {
-            binding.buttonSend.extend()
-        }
     }
 
     // === Send button ===

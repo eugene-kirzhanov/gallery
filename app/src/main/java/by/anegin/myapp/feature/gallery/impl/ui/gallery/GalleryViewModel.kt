@@ -53,6 +53,16 @@ class GalleryViewModel @Inject constructor(
     }
     val toolbarCheck = _toolbarCheck.asLiveData(viewModelScope.coroutineContext)
 
+    private val _sendButtonVisibility = combine(selectedUris, _currentMediaItemUri, _isInFullScreenMode) { selectedUris, currentMediaItemUri, isInFullScreenMode ->
+        (currentMediaItemUri != null && !isInFullScreenMode) || (currentMediaItemUri == null && selectedUris.isNotEmpty())
+    }
+    val sendButtonVisiblity = _sendButtonVisibility.asLiveData(viewModelScope.coroutineContext)
+
+    private val _sendButtonExtended = combine(selectedUris, _currentMediaItem) { selectedUris, currentMediaItemUri ->
+        selectedUris.isNotEmpty() && currentMediaItemUri == null
+    }
+    val sendButtonExtended = _sendButtonExtended.asLiveData(viewModelScope.coroutineContext)
+
     init {
         mediaSource.init()
     }
