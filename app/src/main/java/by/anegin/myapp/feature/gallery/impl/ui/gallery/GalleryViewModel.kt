@@ -40,7 +40,7 @@ class GalleryViewModel @Inject constructor(
         currentMediaItemUri?.let { uri ->
             mediaItems.find { it.uri == uri }
         }
-    }
+    }.flowOn(Dispatchers.Default)
     val currentMediaItem = _currentMediaItem.asLiveData(viewModelScope.coroutineContext)
 
     private val _toolbarCounter = combine(selectedUris, _currentMediaItemUri) { selectedUris, currentMediaItemUri ->
