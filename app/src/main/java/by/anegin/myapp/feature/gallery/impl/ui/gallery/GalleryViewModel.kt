@@ -1,5 +1,6 @@
 package by.anegin.myapp.feature.gallery.impl.ui.gallery
 
+import android.graphics.Rect
 import android.net.Uri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.asLiveData
@@ -53,8 +54,13 @@ class GalleryViewModel @Inject constructor(
     }
     val toolbarCheck = _toolbarCheck.asLiveData(viewModelScope.coroutineContext)
 
+    private val _topSendButtonVisibility = _currentMediaItemUri.map { currentMediaItemUri ->
+        currentMediaItemUri != null
+    }
+    val topSendButtonVisiblity = _topSendButtonVisibility.asLiveData(viewModelScope.coroutineContext)
+
     private val _sendButtonVisibility = combine(selectedUris, _currentMediaItemUri, _isInFullScreenMode) { selectedUris, currentMediaItemUri, isInFullScreenMode ->
-        (currentMediaItemUri != null && !isInFullScreenMode) || (currentMediaItemUri == null && selectedUris.isNotEmpty())
+        currentMediaItemUri == null && selectedUris.isNotEmpty()
     }
     val sendButtonVisiblity = _sendButtonVisibility.asLiveData(viewModelScope.coroutineContext)
 
@@ -62,6 +68,10 @@ class GalleryViewModel @Inject constructor(
         selectedUris.isNotEmpty() && currentMediaItemUri == null
     }
     val sendButtonExtended = _sendButtonExtended.asLiveData(viewModelScope.coroutineContext)
+
+    var insets = Rect()
+    var topToolbarHeight = 0
+    var bottomToolbarHeight = 0
 
     init {
         mediaSource.init()
@@ -74,6 +84,10 @@ class GalleryViewModel @Inject constructor(
 
     fun toggleFullScreen() {
         _isInFullScreenMode.value = _isInFullScreenMode.value != true
+    }
+
+    fun setFullScreen(fullscreen: Boolean) {
+        _isInFullScreenMode.value = fullscreen
     }
 
     fun isInFullScreenMode() = _isInFullScreenMode.value

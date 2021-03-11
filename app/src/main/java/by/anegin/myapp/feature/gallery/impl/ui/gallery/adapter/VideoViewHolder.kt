@@ -3,7 +3,7 @@ package by.anegin.myapp.feature.gallery.impl.ui.gallery.adapter
 import android.view.ViewGroup
 import android.widget.ImageView
 import by.anegin.myapp.R
-import by.anegin.myapp.databinding.ItemVideoBinding
+import by.anegin.myapp.databinding.GalleryItemVideoBinding
 import by.anegin.myapp.feature.gallery.impl.ui.gallery.model.MediaItem
 import by.anegin.myapp.feature.gallery.impl.ui.gallery.util.SimpleGlideRequestListener
 import by.anegin.myapp.feature.gallery.impl.ui.gallery.util.ViewBindingViewHolder
@@ -17,7 +17,7 @@ class VideoViewHolder(
     private val glide: RequestManager,
     onClick: (ImageView, MediaItem.Video) -> Unit,
     onToggleClick: (MediaItem.Video) -> Unit
-) : ViewBindingViewHolder<ItemVideoBinding>(parent, ItemVideoBinding::inflate) {
+) : ViewBindingViewHolder<GalleryItemVideoBinding>(parent, GalleryItemVideoBinding::inflate) {
 
     private var video: MediaItem.Video? = null
 

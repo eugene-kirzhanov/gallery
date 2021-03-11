@@ -28,7 +28,7 @@ import androidx.recyclerview.widget.RecyclerView
 import androidx.recyclerview.widget.SimpleItemAnimator
 import androidx.viewpager2.widget.ViewPager2
 import by.anegin.myapp.R
-import by.anegin.myapp.databinding.FragmentGalleryBinding
+import by.anegin.myapp.databinding.GalleryFragmentBinding
 import by.anegin.myapp.feature.gallery.impl.ui.gallery.adapter.MediaItemsAdapter
 import by.anegin.myapp.feature.gallery.impl.ui.gallery.model.MediaItem
 import by.anegin.myapp.feature.gallery.impl.ui.gallery.util.GridItemDecoration
@@ -39,7 +39,7 @@ import com.bumptech.glide.Glide
 import dagger.hilt.android.AndroidEntryPoint
 
 @AndroidEntryPoint
-class GalleryFragment : DialogFragment(R.layout.fragment_gallery) {
+class GalleryFragment : DialogFragment(R.layout.gallery_fragment) {
 
     companion object {
         private const val ARG_REQUEST_KEY = "request_key"
@@ -59,7 +59,7 @@ class GalleryFragment : DialogFragment(R.layout.fragment_gallery) {
         }
     }
 
-    private val binding by viewBinding(FragmentGalleryBinding::bind)
+    private val binding by viewBinding(GalleryFragmentBinding::bind)
 
     private val viewModel: GalleryViewModel by viewModels()
 
@@ -104,6 +104,11 @@ class GalleryFragment : DialogFragment(R.layout.fragment_gallery) {
         view.setOnApplyWindowInsetsListener { _, insets ->
             val systemBarInsets = WindowInsetsCompat.toWindowInsetsCompat(insets)
                 .getInsets(WindowInsetsCompat.Type.systemBars())
+
+            viewModel.insets.set(systemBarInsets.left, systemBarInsets.top, systemBarInsets.right, systemBarInsets.bottom)
+            viewModel.topToolbarHeight = binding.toolbar.height
+            viewModel.bottomToolbarHeight = binding.root.height - binding.buttonSend.top
+
             binding.toolbar.setPadding(0, systemBarInsets.top, 0, 0)
             binding.bottomBar.updateLayoutParams { height = systemBarInsets.bottom }
 
@@ -170,6 +175,9 @@ class GalleryFragment : DialogFragment(R.layout.fragment_gallery) {
         binding.buttonSend.setSingleClickListener {
             returnSelectedUris()
         }
+        binding.buttonSendTop.setSingleClickListener {
+            returnSelectedUris()
+        }
 
         viewModel.selectedCount.observe(viewLifecycleOwner) { count ->
             binding.buttonSend.text = getString(R.string.send_with_counter, count)
@@ -225,6 +233,9 @@ class GalleryFragment : DialogFragment(R.layout.fragment_gallery) {
             binding.imageSelectionCheck.isSelected = check == true
             binding.imageSelectionCheck.visibility = if (check != null) VISIBLE else GONE
         }
+        viewModel.topSendButtonVisiblity.observe(viewLifecycleOwner) { visible ->
+            binding.buttonSendTop.visibility = if (visible) VISIBLE else GONE
+        }
         viewModel.isInFullScreenMode.observe(viewLifecycleOwner) { isInFullscreen ->
             setToolbarsVisibility(visible = !isInFullscreen)
         }
@@ -245,6 +256,8 @@ class GalleryFragment : DialogFragment(R.layout.fragment_gallery) {
             setLayout(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT)
             if (!wasRestored) {
                 setWindowAnimations(R.style.Theme_Gallery_Slide)
+            } else {
+                setWindowAnimations(R.style.Theme_Gallery_SlideExit)
             }
         }
     }

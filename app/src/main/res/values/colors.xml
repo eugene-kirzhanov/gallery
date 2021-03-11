@@ -2,4 +2,5 @@
 <resources>
     <color name="bg">#212d3b</color>
     <color name="media_view_toolbar_bg">#88000000</color>
+    <color name="media_view_toolbar_bg_transparent">#00000000</color>
 </resources>

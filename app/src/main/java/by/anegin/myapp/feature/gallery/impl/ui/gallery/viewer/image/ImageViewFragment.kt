@@ -11,7 +11,7 @@ import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
 import by.anegin.myapp.R
-import by.anegin.myapp.databinding.FragmentImageViewBinding
+import by.anegin.myapp.databinding.GalleryFragmentImageViewBinding
 import by.anegin.myapp.feature.gallery.impl.data.MediaStoreUtils
 import by.anegin.myapp.feature.gallery.impl.ui.gallery.GalleryViewModel
 import by.anegin.myapp.feature.gallery.impl.ui.gallery.util.setSingleClickListener
@@ -21,7 +21,7 @@ import com.davemorrissey.labs.subscaleview.SubsamplingScaleImageView
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
-class ImageViewFragment : Fragment(R.layout.fragment_image_view) {
+class ImageViewFragment : Fragment(R.layout.gallery_fragment_image_view) {
 
     companion object {
         private const val ARG_IMAGE_URI = "image_uri"
@@ -31,7 +31,7 @@ class ImageViewFragment : Fragment(R.layout.fragment_image_view) {
         }
     }
 
-    private val binding by viewBinding(FragmentImageViewBinding::bind)
+    private val binding by viewBinding(GalleryFragmentImageViewBinding::bind)
 
     private val galleryViewModel: GalleryViewModel by viewModels({ requireParentFragment() })
 

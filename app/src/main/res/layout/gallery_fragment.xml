@@ -35,6 +35,19 @@
             app:titleTextColor="@android:color/white">
 
             <ImageView
+                android:id="@+id/buttonSendTop"
+                android:layout_width="48dp"
+                android:layout_height="48dp"
+                android:layout_gravity="center_vertical|end"
+                android:background="?attr/selectableItemBackgroundBorderless"
+                android:contentDescription="@null"
+                android:scaleType="centerInside"
+                android:src="@drawable/ic_action_send"
+                android:visibility="gone"
+                app:tint="?attr/colorAccent"
+                tools:visibility="visible" />
+
+            <ImageView
                 android:id="@+id/imageSelectionCheck"
                 android:layout_width="48dp"
                 android:layout_height="48dp"
@@ -87,7 +100,7 @@
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@id/toolbar"
             tools:layoutManager="androidx.recyclerview.widget.GridLayoutManager"
-            tools:listitem="@layout/item_image"
+            tools:listitem="@layout/gallery_item_image"
             tools:orientation="vertical"
             tools:spanCount="3" />
 
