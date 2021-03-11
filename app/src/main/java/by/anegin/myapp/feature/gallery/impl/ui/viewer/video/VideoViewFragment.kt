@@ -20,8 +20,8 @@ class VideoViewFragment : Fragment(R.layout.fragment_video_view) {
 //    private val binding by viewBinding(FragmentVideoViewBinding::bind)
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        val videoUri = arguments?.getParcelable(ARG_VIDEO_URI) as? Uri
-            ?: return
+//        val videoUri = arguments?.getParcelable(ARG_VIDEO_URI) as? Uri
+//            ?: return
     }
 
 }

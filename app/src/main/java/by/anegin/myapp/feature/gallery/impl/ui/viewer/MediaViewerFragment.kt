@@ -9,9 +9,9 @@ import androidx.core.view.updateLayoutParams
 import androidx.fragment.app.DialogFragment
 import androidx.fragment.app.viewModels
 import by.anegin.myapp.R
-import by.anegin.myapp.common.ui.viewBinding
 import by.anegin.myapp.databinding.FragmentMediaViewerBinding
 import by.anegin.myapp.feature.gallery.impl.ui.common.model.MediaItem
+import by.kirich1409.viewbindingdelegate.viewBinding
 import dagger.hilt.android.AndroidEntryPoint
 
 @AndroidEntryPoint

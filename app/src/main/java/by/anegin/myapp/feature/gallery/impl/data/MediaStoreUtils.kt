@@ -4,6 +4,9 @@ import android.content.Context
 import android.database.Cursor
 import android.media.MediaMetadataRetriever
 import android.net.Uri
+import android.os.CancellationSignal
+import androidx.exifinterface.media.ExifInterface
+import com.davemorrissey.labs.subscaleview.SubsamplingScaleImageView
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.suspendCancellableCoroutine
@@ -47,6 +50,29 @@ object MediaStoreUtils {
         } catch (e: Exception) {
             Timber.e("Error extracting video duration from video `$uri`: ${e.message}")
             -1
+        }
+    }
+
+    suspend fun getImageOrientation(context: Context, imageUri: Uri) = suspendCancellableCoroutine<Int> { continuation ->
+        val cancellationSignal = CancellationSignal()
+        continuation.invokeOnCancellation {
+            cancellationSignal.cancel()
+        }
+        try {
+            context.contentResolver.openFileDescriptor(imageUri, "r", cancellationSignal)?.use {
+                if (continuation.isActive) {
+                    val exif = ExifInterface(it.fileDescriptor)
+                    val orientation = when (exif.rotationDegrees) {
+                        90 -> SubsamplingScaleImageView.ORIENTATION_90
+                        180 -> SubsamplingScaleImageView.ORIENTATION_180
+                        270 -> SubsamplingScaleImageView.ORIENTATION_270
+                        else -> 0
+                    }
+                    continuation.resume(orientation)
+                }
+            }
+        } catch (e: Exception) {
+            continuation.resumeWithException(e)
         }
     }
 

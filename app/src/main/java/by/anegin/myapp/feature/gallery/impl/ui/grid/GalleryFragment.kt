@@ -1,19 +1,21 @@
 package by.anegin.myapp.feature.gallery.impl.ui.grid
 
 import android.Manifest
-import android.annotation.SuppressLint
+import android.app.Dialog
 import android.content.pm.PackageManager
 import android.os.Bundle
-import android.view.*
+import android.view.View
+import android.view.ViewGroup
+import android.view.WindowManager
 import android.view.animation.AccelerateDecelerateInterpolator
 import android.widget.ImageView
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.appcompat.app.AppCompatActivity
-import androidx.appcompat.view.menu.MenuBuilder
 import androidx.core.content.ContextCompat
 import androidx.core.os.bundleOf
+import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.doOnLayout
+import androidx.core.view.updateLayoutParams
 import androidx.fragment.app.DialogFragment
 import androidx.fragment.app.setFragmentResult
 import androidx.fragment.app.viewModels
@@ -21,12 +23,12 @@ import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import androidx.recyclerview.widget.SimpleItemAnimator
 import by.anegin.myapp.R
-import by.anegin.myapp.common.ui.viewBinding
 import by.anegin.myapp.databinding.FragmentGalleryBinding
 import by.anegin.myapp.feature.gallery.impl.ui.common.model.MediaItem
 import by.anegin.myapp.feature.gallery.impl.ui.grid.adapter.MediaItemsAdapter
 import by.anegin.myapp.feature.gallery.impl.ui.grid.util.GridItemDecoration
 import by.anegin.myapp.feature.gallery.impl.ui.viewer.MediaViewerFragment
+import by.kirich1409.viewbindingdelegate.viewBinding
 import com.bumptech.glide.Glide
 import dagger.hilt.android.AndroidEntryPoint
 
@@ -67,18 +69,29 @@ class GalleryFragment : DialogFragment(R.layout.fragment_gallery) {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setHasOptionsMenu(true)
         setStyle(STYLE_NORMAL, R.style.Theme_Gallery_FullScreenDialog)
     }
 
+    override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
+        return super.onCreateDialog(savedInstanceState).apply {
+            window?.addFlags(WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS)
+        }
+    }
+
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        (requireActivity() as? AppCompatActivity)?.apply {
-            setSupportActionBar(binding.toolbar)
-            supportActionBar?.setDisplayHomeAsUpEnabled(true)
+        view.setOnApplyWindowInsetsListener { _, insets ->
+            val systemBarInsets = WindowInsetsCompat.toWindowInsetsCompat(insets)
+                .getInsets(WindowInsetsCompat.Type.systemBars())
+            binding.toolbar.setPadding(0, systemBarInsets.top, 0, 0)
+            binding.bottomBar.updateLayoutParams { height = systemBarInsets.bottom }
+            insets
         }
 
-        binding.toolbar.setNavigationOnClickListener {
-            dismiss()
+        binding.toolbar.apply {
+            setNavigationIcon(R.drawable.abc_ic_ab_back_material)
+            setNavigationOnClickListener {
+                dismiss()
+            }
         }
 
         binding.recyclerViewMedia.layoutManager = GridLayoutManager(view.context, 3)
@@ -99,7 +112,7 @@ class GalleryFragment : DialogFragment(R.layout.fragment_gallery) {
         })
 
         binding.buttonSend.doOnLayout {
-            binding.buttonSend.translationY = binding.buttonSend.height * 1.5f
+            binding.buttonSend.translationY = binding.buttonSend.height * 1.5f + binding.bottomBar.height
         }
         binding.buttonSend.setOnClickListener {
             returnSelectedUris()
@@ -114,7 +127,7 @@ class GalleryFragment : DialogFragment(R.layout.fragment_gallery) {
             if (count > 0) {
                 animateSendButton(0f)
             } else {
-                animateSendButton(binding.buttonSend.height * 1.5f)
+                animateSendButton(binding.buttonSend.height * 1.5f + binding.bottomBar.height)
             }
         }
     }
@@ -141,21 +154,21 @@ class GalleryFragment : DialogFragment(R.layout.fragment_gallery) {
         }
     }
 
-    @SuppressLint("RestrictedApi")
-    override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
-        inflater.inflate(R.menu.gallery, menu)
-        (menu as? MenuBuilder)?.setOptionalIconsVisible(true)
-        super.onCreateOptionsMenu(menu, inflater)
-    }
-
-    override fun onOptionsItemSelected(item: MenuItem): Boolean {
-        return if (item.itemId == R.id.action_open_in) {
-            returnExternanlAppRequested()
-            true
-        } else {
-            super.onOptionsItemSelected(item)
-        }
-    }
+//    @SuppressLint("RestrictedApi")
+//    override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
+//        inflater.inflate(R.menu.gallery, menu)
+//        (menu as? MenuBuilder)?.setOptionalIconsVisible(true)
+//        super.onCreateOptionsMenu(menu, inflater)
+//    }
+//
+//    override fun onOptionsItemSelected(item: MenuItem): Boolean {
+//        return if (item.itemId == R.id.action_open_in) {
+//            returnExternanlAppRequested()
+//            true
+//        } else {
+//            super.onOptionsItemSelected(item)
+//        }
+//    }
 
     private fun animateSendButton(targetTranslationX: Float) {
         if (binding.buttonSend.translationY != targetTranslationX) {

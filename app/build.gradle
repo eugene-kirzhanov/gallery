@@ -68,6 +68,8 @@ dependencies {
 
     implementation "com.davemorrissey.labs:subsampling-scale-image-view:3.10.0"
 
+    implementation 'com.github.kirich1409:viewbindingpropertydelegate:1.4.4'
+
 //    implementation "com.google.android.exoplayer:exoplayer-core:2.13.1"
 //    implementation "com.google.android.exoplayer:exoplayer-ui:2.13.1"
 
