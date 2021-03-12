@@ -218,8 +218,8 @@ class GalleryFragment : DialogFragment(R.layout.gallery_fragment) {
             binding.toolbar.setBackgroundColor(toolbarBgColor)
             binding.bottomBar.setBackgroundColor(toolbarBgColor)
 
-            binding.recyclerViewMedia.visibility = if (isInViewerMode) INVISIBLE else VISIBLE
-            binding.viewPagerMedia.visibility = if (isInViewerMode) VISIBLE else INVISIBLE
+            setGridVisibility(!isInViewerMode)
+            setPagerVisibility(isInViewerMode)
 
             if (!isInViewerMode && viewModel.isInFullScreenMode()) {
                 viewModel.toggleFullScreen()
@@ -305,9 +305,6 @@ class GalleryFragment : DialogFragment(R.layout.gallery_fragment) {
     }
 
     private fun onMediaItemClick(view: ImageView, mediaItem: MediaItem) {
-//        val itemPosition = pagerAdapter.getItemPosition(mediaItem)
-//        if (itemPosition == -1) return
-//        binding.viewPagerMedia.setCurrentItem(itemPosition, false)
         viewModel.onCurrentMediaItemChanged(mediaItem.uri)
     }
 
@@ -365,6 +362,35 @@ class GalleryFragment : DialogFragment(R.layout.gallery_fragment) {
             binding.toolbar.translationY = toolbarTranslationY
             binding.bottomBar.translationY = bottomViewTranslationY
         }
+    }
+
+    // ==========
+
+    private fun setGridVisibility(visible: Boolean) {
+        val alpha = if (visible) 1f else 0f
+        animateViewAlpha(binding.recyclerViewMedia, alpha)
+    }
+
+    private fun setPagerVisibility(visible: Boolean) {
+        val alpha = if (visible) 1f else 0f
+        animateViewAlpha(binding.viewPagerMedia, alpha)
+    }
+
+    private fun animateViewAlpha(view: View, targetAlpha: Float) {
+        view.animate()
+            .alpha(targetAlpha)
+            .setDuration(250)
+            .withStartAction {
+                if (targetAlpha == 1f && view.visibility == INVISIBLE) {
+                    view.visibility = VISIBLE
+                }
+            }
+            .withEndAction {
+                if (targetAlpha == 0f && view.visibility == VISIBLE) {
+                    view.visibility = INVISIBLE
+                }
+            }
+            .start()
     }
 
 }
