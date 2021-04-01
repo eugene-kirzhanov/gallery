@@ -1,7 +1,6 @@
 package by.anegin.myapp.feature.gallery.impl.ui.gallery.adapter
 
 import android.view.ViewGroup
-import android.widget.ImageView
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
@@ -10,7 +9,8 @@ import com.bumptech.glide.RequestManager
 
 class MediaItemsAdapter(
     private val glide: RequestManager,
-    private val onMediaItemClick: (ImageView, MediaItem) -> Unit,
+    private val onMediaItemClick: (MediaItem) -> Unit,
+    private val onMediaItemLongClick: (Int) -> Unit,
     private val onMediaItemToggleClick: (MediaItem) -> Unit
 ) : ListAdapter<MediaItem, RecyclerView.ViewHolder>(MediaItemsDiffCallback()) {
 
@@ -28,8 +28,8 @@ class MediaItemsAdapter(
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecyclerView.ViewHolder {
         return when (viewType) {
-            ITEM_IMAGE -> ImageViewHolder(parent, glide, onMediaItemClick, onMediaItemToggleClick)
-            ITEM_VIDEO -> VideoViewHolder(parent, glide, onMediaItemClick, onMediaItemToggleClick)
+            ITEM_IMAGE -> ImageViewHolder(parent, glide, onMediaItemClick, onMediaItemLongClick, onMediaItemToggleClick)
+            ITEM_VIDEO -> VideoViewHolder(parent, glide, onMediaItemClick, onMediaItemLongClick, onMediaItemToggleClick)
             else -> throw IllegalArgumentException("Unknown viewType: $viewType")
         }
     }

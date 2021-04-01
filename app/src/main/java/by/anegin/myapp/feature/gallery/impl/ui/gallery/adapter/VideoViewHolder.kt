@@ -15,7 +15,8 @@ import com.bumptech.glide.load.resource.drawable.DrawableTransitionOptions.withC
 class VideoViewHolder(
     parent: ViewGroup,
     private val glide: RequestManager,
-    onClick: (ImageView, MediaItem.Video) -> Unit,
+    onClick: (MediaItem.Video) -> Unit,
+    onLongClick: (Int) -> Unit,
     onToggleClick: (MediaItem.Video) -> Unit
 ) : ViewBindingViewHolder<GalleryItemVideoBinding>(parent, GalleryItemVideoBinding::inflate) {
 
@@ -34,9 +35,15 @@ class VideoViewHolder(
 
     init {
         binding.root.setSingleClickListener {
-            video?.let {
-                onClick(binding.imagePreview, it)
-            }
+            video?.let(onClick)
+        }
+        binding.root.setOnLongClickListener {
+            onLongClick(adapterPosition)
+            true
+        }
+        binding.textSelectionIndex.setOnLongClickListener {
+            onLongClick(adapterPosition)
+            true
         }
         binding.textSelectionIndex.setSingleClickListener {
             video?.let(onToggleClick)

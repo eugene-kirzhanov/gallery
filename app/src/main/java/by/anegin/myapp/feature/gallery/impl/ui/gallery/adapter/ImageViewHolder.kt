@@ -15,7 +15,8 @@ import com.bumptech.glide.load.resource.drawable.DrawableTransitionOptions.withC
 class ImageViewHolder(
     parent: ViewGroup,
     private val glide: RequestManager,
-    onClick: (ImageView, MediaItem.Image) -> Unit,
+    onClick: (MediaItem.Image) -> Unit,
+    onLongClick: (Int) -> Unit,
     onToggleClick: (MediaItem.Image) -> Unit
 ) : ViewBindingViewHolder<GalleryItemImageBinding>(parent, GalleryItemImageBinding::inflate) {
 
@@ -33,10 +34,16 @@ class ImageViewHolder(
     private val selectionHelper = MediaSelectionHelper(this, binding.imagePreview)
 
     init {
-        binding.root.setSingleClickListener { _ ->
-            image?.let {
-                onClick(binding.imagePreview, it)
-            }
+        binding.root.setSingleClickListener {
+            image?.let(onClick)
+        }
+        binding.root.setOnLongClickListener {
+            onLongClick(adapterPosition)
+            true
+        }
+        binding.textSelectionIndex.setOnLongClickListener {
+            onLongClick(adapterPosition)
+            true
         }
         binding.textSelectionIndex.setSingleClickListener {
             image?.let(onToggleClick)

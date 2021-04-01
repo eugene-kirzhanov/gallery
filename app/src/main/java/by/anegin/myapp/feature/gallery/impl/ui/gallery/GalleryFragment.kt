@@ -11,7 +11,6 @@ import android.view.View.*
 import android.view.ViewGroup
 import android.view.WindowManager
 import android.view.animation.AccelerateDecelerateInterpolator
-import android.widget.ImageView
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.view.menu.MenuBuilder
@@ -29,9 +28,10 @@ import androidx.recyclerview.widget.SimpleItemAnimator
 import androidx.viewpager2.widget.ViewPager2
 import by.anegin.myapp.R
 import by.anegin.myapp.databinding.GalleryFragmentBinding
+import by.anegin.myapp.feature.gallery.impl.ui.gallery.adapter.GestureSelectionTouchHelper
 import by.anegin.myapp.feature.gallery.impl.ui.gallery.adapter.MediaItemsAdapter
-import by.anegin.myapp.feature.gallery.impl.ui.gallery.model.MediaItem
 import by.anegin.myapp.feature.gallery.impl.ui.gallery.util.GridItemDecoration
+import by.anegin.myapp.feature.gallery.impl.ui.gallery.util.observeFlow
 import by.anegin.myapp.feature.gallery.impl.ui.gallery.util.setSingleClickListener
 import by.anegin.myapp.feature.gallery.impl.ui.gallery.viewer.MediaPagerAdapter
 import by.kirich1409.viewbindingdelegate.viewBinding
@@ -112,7 +112,7 @@ class GalleryFragment : DialogFragment(R.layout.gallery_fragment) {
             binding.toolbar.setPadding(0, systemBarInsets.top, 0, 0)
             binding.bottomBar.updateLayoutParams { height = systemBarInsets.bottom }
 
-            val isInFullScreenMode = viewModel.isInFullScreenMode.value ?: false
+            val isInFullScreenMode = viewModel.isInFullScreenMode.value
             setToolbarsVisibility(visible = !isInFullScreenMode, animate = false)
 
             insets
@@ -137,7 +137,19 @@ class GalleryFragment : DialogFragment(R.layout.gallery_fragment) {
             }
         }
 
-        val gridAdapter = MediaItemsAdapter(Glide.with(this), ::onMediaItemClick, ::onMediaItemToggleClick)
+        val gestureSelectionTouchHelper = GestureSelectionTouchHelper(
+            binding.recyclerViewMedia,
+            viewModel::onGestureSelectionChanged,
+            viewModel::onGestureSelectionFinished
+        )
+        binding.recyclerViewMedia.addOnItemTouchListener(gestureSelectionTouchHelper)
+
+        val gridAdapter = MediaItemsAdapter(
+            Glide.with(this),
+            viewModel::onCurrentMediaItemChanged,
+            gestureSelectionTouchHelper::startGestureSelection,
+            viewModel::toggleMediaItem
+        )
         pagerAdapter = MediaPagerAdapter(this)
 
         viewModel.mediaItems.observe(viewLifecycleOwner) {
@@ -179,7 +191,7 @@ class GalleryFragment : DialogFragment(R.layout.gallery_fragment) {
             returnSelectedUris()
         }
 
-        viewModel.selectedCount.observe(viewLifecycleOwner) { count ->
+        observeFlow(viewModel.selectedCount) { count ->
             binding.buttonSend.text = getString(R.string.send_with_counter, count)
         }
 
@@ -193,7 +205,7 @@ class GalleryFragment : DialogFragment(R.layout.gallery_fragment) {
                     val currentPosition = binding.viewPagerMedia.currentItem
                     if (currentPosition in 0 until pagerAdapter.itemCount) {
                         val currentMedia = pagerAdapter.getItem(currentPosition)
-                        viewModel.onCurrentMediaItemChanged(currentMedia.uri)
+                        viewModel.onCurrentMediaItemChanged(currentMedia)
                     }
                 }
             }
@@ -225,18 +237,18 @@ class GalleryFragment : DialogFragment(R.layout.gallery_fragment) {
                 viewModel.toggleFullScreen()
             }
         }
-        viewModel.toolbarCounter.observe(viewLifecycleOwner) { count ->
+        observeFlow(viewModel.toolbarCounter) { count ->
             binding.textSelectedCount.text = count.toString()
             binding.textSelectedCount.visibility = if (count > 0) VISIBLE else GONE
         }
-        viewModel.toolbarCheck.observe(viewLifecycleOwner) { check ->
+        observeFlow(viewModel.isToolbarCheckVisible) { check ->
             binding.imageSelectionCheck.isSelected = check == true
             binding.imageSelectionCheck.visibility = if (check != null) VISIBLE else GONE
         }
-        viewModel.topSendButtonVisiblity.observe(viewLifecycleOwner) { visible ->
+        observeFlow(viewModel.isTopSendButtonVisible) { visible ->
             binding.buttonSendTop.visibility = if (visible) VISIBLE else GONE
         }
-        viewModel.isInFullScreenMode.observe(viewLifecycleOwner) { isInFullscreen ->
+        observeFlow(viewModel.isInFullScreenMode) { isInFullscreen ->
             setToolbarsVisibility(visible = !isInFullscreen)
         }
 
@@ -302,14 +314,6 @@ class GalleryFragment : DialogFragment(R.layout.gallery_fragment) {
             )
         )
         dismiss()
-    }
-
-    private fun onMediaItemClick(view: ImageView, mediaItem: MediaItem) {
-        viewModel.onCurrentMediaItemChanged(mediaItem.uri)
-    }
-
-    private fun onMediaItemToggleClick(media: MediaItem) {
-        viewModel.toggleMediaItem(media)
     }
 
     private fun setSendButtonExtendState(extended: Boolean) {
