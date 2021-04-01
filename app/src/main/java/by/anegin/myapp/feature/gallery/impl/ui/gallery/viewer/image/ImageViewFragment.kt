@@ -43,9 +43,29 @@ class ImageViewFragment : Fragment(R.layout.gallery_fragment_image_view) {
 
         binding.progress.visibility = VISIBLE
 
+//        val rect = Rect()
+//        val topLeft = PointF()
+//        val bottomRight = PointF()
+//        binding.dim.visibility = VISIBLE
+
         binding.image.setOnImageEventListener(object : SubsamplingScaleImageView.OnImageEventListener {
             override fun onReady() {
-                binding.progress.visibility = GONE
+//                binding.image.visibleFileRect(rect)
+//                var right = rect.width()
+//                var bottom = rect.height()
+//                if (binding.image.appliedOrientation == 90 || binding.image.appliedOrientation == 270) {
+//                    right = rect.height()
+//                    bottom = rect.width()
+//                }
+//                binding.image.sourceToViewCoord(0f, 0f, topLeft)
+//                binding.image.sourceToViewCoord(right.toFloat(), bottom.toFloat(), bottomRight)
+//
+//                val ww = bottomRight.x - topLeft.x
+//                val hh = bottomRight.y - topLeft.y
+//                binding.dim.updateLayoutParams {
+//                    width = ww.toInt()
+//                    height = hh.toInt()
+//                }
             }
 
             override fun onImageLoadError(e: Exception?) {
@@ -53,7 +73,9 @@ class ImageViewFragment : Fragment(R.layout.gallery_fragment_image_view) {
                 Toast.makeText(view.context, R.string.error_loading_image, Toast.LENGTH_SHORT).show()
             }
 
-            override fun onImageLoaded() {}
+            override fun onImageLoaded() {
+                binding.progress.visibility = GONE
+            }
 
             override fun onPreviewLoadError(e: Exception?) {}
 

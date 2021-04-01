@@ -186,7 +186,7 @@ class GalleryFragment : DialogFragment(R.layout.gallery_fragment) {
         // === Viewer ===
 
         binding.viewPagerMedia.adapter = pagerAdapter
-        binding.viewPagerMedia.offscreenPageLimit = 1
+        //binding.viewPagerMedia.offscreenPageLimit = 1
         binding.viewPagerMedia.registerOnPageChangeCallback(object : ViewPager2.OnPageChangeCallback() {
             override fun onPageScrollStateChanged(state: Int) {
                 if (state == ViewPager2.SCROLL_STATE_IDLE) {
